@@ -1,0 +1,164 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AccountType {
+  SAVINGS
+  CURRENT
+  DOMICILIARY
+  CREDIT
+  WALLET
+  INVESTMENT
+}
+
+enum Currency {
+  NGN
+  USD
+  EUR
+  GBP
+}
+
+enum StatementStatus {
+  UPLOADED
+  PARSING
+  EXTRACTED
+  NORMALIZED
+  CLASSIFIED
+  COMPLETED
+  FAILED
+}
+
+enum TransactionDirection {
+  DEBIT
+  CREDIT
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  INTERNAL_TRANSFER
+  SAVINGS_TRANSFER
+  INVESTMENT
+  REFUND
+  LOAN_DISBURSEMENT
+  LOAN_REPAYMENT
+  BANK_CHARGE
+  GIVING
+  UNCATEGORIZED
+}
+
+model User {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  name      String?
+  accounts  Account[]
+  statements Statement[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("users")
+}
+
+model Account {
+  id                  String        @id @default(uuid())
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankName            String
+  accountName         String
+  accountNumberMasked String
+  accountType         AccountType   @default(CURRENT)
+  currency            Currency      @default(NGN)
+  statements          Statement[]
+  transactions        Transaction[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@map("accounts")
+}
+
+model Statement {
+  id                 String          @id @default(uuid())
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId          String
+  account            Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  fileName           String
+  fileSize           Int
+  fileType           String
+  bankName           String
+  periodStart        DateTime
+  periodEnd          DateTime
+  openingBalance     Decimal         @default(0) @db.Decimal(15, 2)
+  closingBalance     Decimal         @default(0) @db.Decimal(15, 2)
+  transactionCount   Int             @default(0)
+  status             StatementStatus @default(UPLOADED)
+  rawMetadataJson    Json?
+  transactions       Transaction[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("statements")
+}
+
+model Transaction {
+  id                      String               @id @default(uuid())
+  statementId             String
+  statement               Statement            @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  accountId               String
+  account                 Account              @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  date                    DateTime
+  description             String
+  originalDescription     String
+  merchant                String?
+  reference               String?
+  debit                   Decimal              @default(0) @db.Decimal(15, 2)
+  credit                  Decimal              @default(0) @db.Decimal(15, 2)
+  balance                 Decimal              @default(0) @db.Decimal(15, 2)
+  currency                Currency             @default(NGN)
+  direction               TransactionDirection
+  
+  category                String
+  categoryGroup           String
+  subcategory             String?
+  transactionType         TransactionType      @default(UNCATEGORIZED)
+  classificationConfidence Decimal             @default(0) @db.Decimal(4, 3)
+  classificationMethod    String               @default("deterministic")
+  userOverriddenCategory  Boolean              @default(false)
+  
+  isInternalTransfer      Boolean              @default(false)
+  isRefund                Boolean              @default(false)
+  isRecurring             Boolean              @default(false)
+  isIncome                Boolean              @default(false)
+  isExpense               Boolean              @default(false)
+  isSavings               Boolean              @default(false)
+  
+  parentTransactionId     String?
+  notes                   String?
+  source                  String               @default("statement")
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
+  @@index([statementId])
+  @@index([accountId])
+  @@index([date])
+  @@index([category])
+  @@map("transactions")
+}
+
+model MerchantRule {
+  id          String   @id @default(uuid())
+  pattern     String   @unique
+  merchant    String
+  category    String
+  categoryGroup String
+  confidence  Decimal  @default(0.99) @db.Decimal(4, 3)
+  isRecurring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("merchant_rules")
+}

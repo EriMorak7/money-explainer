@@ -1,0 +1,33 @@
+{
+  "name": "money-explainer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ./scripts/build-css.mjs && next dev --webpack",
+    "build": "node ./scripts/build-css.mjs && next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "node ./scripts/test-phase1.mjs && node ./scripts/test-pdf-parser.mjs && node ./scripts/test-classifier.mjs && node ./scripts/test-financial-audit.mjs && node ./scripts/test-dashboard-connection.mjs && node ./scripts/test-analytics.mjs && node ./scripts/test-ai-analyst.mjs && node ./scripts/test-financial-chat.mjs && node ./scripts/test-budget.mjs && node ./scripts/test-production-audit.mjs && node ./scripts/test-savings-tracker.mjs && node ./scripts/test-savings-intelligence.mjs && node ./scripts/test-subscriptions.mjs && node ./scripts/test-export.mjs && node ./scripts/test-settings.mjs && node ./scripts/test-accounting-v2.mjs"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "lucide-react": "^1.72.0",
+    "next": "16.4.6",
+    "pdf-parse": "1.1.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@next/swc-wasm-nodejs": "16.4.6",
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5"
+  }
+}
